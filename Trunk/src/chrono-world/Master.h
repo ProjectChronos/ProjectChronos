@@ -1,6 +1,7 @@
 /*
- * Chrono Emulator
+ * Project Chronos
  * Copyright (C) 2010 ChronoEmu Team <http://www.forsakengaming.com/>
+ * Copyright (C) 2017 Project Chronos <https://github.com/ProjectChronos/ProjectChronos/>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -27,7 +28,7 @@
 #include "MainServerDefines.h"
 
 #ifndef _VERSION
-# define _VERSION "2.0.x"
+# define _VERSION "1.12.x"
 #endif
 
 #if PLATFORM == PLATFORM_WIN32
@@ -67,6 +68,7 @@ public:
 private:
 	bool _StartDB();
 	void _StopDB();
+	bool CheckWorldDBVersion();
 
 	void _HookSignals();
 	void _UnhookSignals();

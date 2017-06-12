@@ -1,6 +1,7 @@
 /*
- * Chrono Emulator
+ * Project Chronos
  * Copyright (C) 2010 ChronoEmu Team <http://www.forsakengaming.com/>
+ * Copyright (C) 2017 Project Chronos <https://github.com/ProjectChronos/ProjectChronos/>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,7 +20,7 @@
 
 #include "StdAfx.h"
 
-#define BANNER "Chrono Emulator r%u/%s-%s-%s :: World Server\n"
+#define BANNER "Project Chronos r%u/%s-%s-%s :: World Server\n"
 
 #ifndef WIN32
 #include <sched.h>
@@ -222,6 +223,12 @@ bool Master::Run(int argc, char ** argv)
 	if( !_StartDB() )
 	{
 		Database::CleanupLibs();
+		return false;
+	}
+
+	// Whats the world DB version??
+	if (!CheckWorldDBVersion())
+	{
 		return false;
 	}
 
@@ -478,6 +485,43 @@ bool Master::Run(int argc, char ** argv)
 
 #endif
 
+	return true;
+}
+
+static const char *REQUIRED_WORLD_DB_VERSION = "06_12_2017_chronos_db_version";
+
+bool Master::CheckWorldDBVersion()
+{
+	QueryResult* wqr = WorldDatabase.QueryNA("SELECT LastUpdate FROM chronos_db_version;");
+	if (wqr == NULL)
+	{
+		Log.Error("Database", "World database is missing the table `chronos_db_version` OR the table doesn't contain any rows. Can't validate database version. Exiting.");
+		Log.Error("Database", "You may need to update your database");
+		return false;
+	}
+
+	Field* f = wqr->Fetch();
+	const char *WorldDBVersion = f->GetString();
+
+	Log.Notice("Database", "Last world database update: %s", WorldDBVersion);
+	int result = strcmp(WorldDBVersion, REQUIRED_WORLD_DB_VERSION);
+	if (result != 0)
+	{
+		Log.Error("Database", "Last world database update doesn't match the required one which is %s.", REQUIRED_WORLD_DB_VERSION);
+
+		if (result < 0)
+		{
+			Log.Error("Database", "You need to apply the world update queries that are newer than %s. Exiting.", WorldDBVersion);
+			Log.Error("Database", "You can find the world update queries in the chronodb\chrono_world_updates sub-directory of your project chronos source directory.");
+		}
+		else
+			Log.Error("Database", "Your world database is probably too new for this version, you need to update your server. Exiting.");
+
+		delete wqr;
+		return false;
+	}
+
+	delete wqr;
 	return true;
 }
 
